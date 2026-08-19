@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Staff Login — PrimeCutz{% endblock %}
+
+{% block content %}
+<h2 class="section-title">Staff Login</h2>
+
+<div class="form-card">
+    <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}
+                    <ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+        {% endfor %}
+        {% if form.non_field_errors %}
+            <ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+        <button type="submit" class="btn">Log In</button>
+    </form>
+</div>
+{% endblock %}

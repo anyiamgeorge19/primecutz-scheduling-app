@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}PrimeCutz Barbershop — Book Your Cut{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Welcome to PrimeCutz</h1>
+    <p>Precision fades, clean beard lines, no-fuss booking. Reserve your seat in under a minute.</p>
+    <a href="{% url 'booking:book_appointment' %}" class="btn">Book an Appointment</a>
+</section>
+
+<h2 class="section-title">Our Services</h2>
+<div class="grid">
+    {% for service in services %}
+        <div class="card">
+            <h3>{{ service.name }}</h3>
+            <p class="meta">{{ service.duration_minutes }} minutes</p>
+            <p class="price">₦{{ service.price }}</p>
+            {% if service.description %}<p>{{ service.description }}</p>{% endif %}
+        </div>
+    {% empty %}
+        <p>Services are being added soon — check back shortly.</p>
+    {% endfor %}
+</div>
+
+<h2 class="section-title">Meet the Barbers</h2>
+<div class="grid">
+    {% for barber in barbers %}
+        <div class="card">
+            <h3>{{ barber.name }}</h3>
+            <p class="meta">
+                {{ barber.work_start|time:"g:i A" }} – {{ barber.work_end|time:"g:i A" }}
+            </p>
+            {% if barber.bio %}<p>{{ barber.bio }}</p>{% endif %}
+        </div>
+    {% empty %}
+        <p>Our barber lineup is being finalized — check back shortly.</p>
+    {% endfor %}
+</div>
+{% endblock %}

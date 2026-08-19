@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Booking Confirmation — PrimeCutz{% endblock %}
+
+{% block content %}
+<h2 class="section-title">Booking Details</h2>
+
+<div class="detail-box">
+    <span class="badge badge-{{ appointment.status }}">{{ appointment.get_status_display }}</span>
+
+    <dl>
+        <dt>Client</dt>
+        <dd>{{ appointment.client_name }}</dd>
+
+        <dt>Contact</dt>
+        <dd>{{ appointment.client_email }} &middot; {{ appointment.client_phone }}</dd>
+
+        <dt>Barber</dt>
+        <dd>{{ appointment.barber.name }}</dd>
+
+        <dt>Service</dt>
+        <dd>{{ appointment.service.name }} (₦{{ appointment.service.price }})</dd>
+
+        <dt>Date &amp; Time</dt>
+        <dd>{{ appointment.date|date:"l, F j, Y" }} at {{ appointment.start_time|time:"g:i A" }}
+            – {{ appointment.end_time|time:"g:i A" }}</dd>
+
+        {% if appointment.notes %}
+            <dt>Notes</dt>
+            <dd>{{ appointment.notes }}</dd>
+        {% endif %}
+    </dl>
+
+    <p style="margin-top: 24px;">
+        <a href="{% url 'booking:home' %}" class="btn btn-secondary">Back to Home</a>
+        <a href="{% url 'booking:book_appointment' %}" class="btn">Book Another</a>
+    </p>
+</div>
+{% endblock %}

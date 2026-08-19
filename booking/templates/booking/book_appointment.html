@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Book an Appointment — PrimeCutz{% endblock %}
+
+{% block content %}
+<h2 class="section-title">Book Your Appointment</h2>
+
+<div class="form-card">
+    <form method="post" id="booking-form" novalidate>
+        {% csrf_token %}
+
+        {% for field in form %}
+            {% if field.name != 'start_time' %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<p class="help-text">{{ field.help_text }}</p>{% endif %}
+                    {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="form-group">
+            <label>Available Times</label>
+            <div id="slots-wrapper">
+                <p class="help-text" id="slots-placeholder">Choose a barber, service, and date above to see open times.</p>
+            </div>
+            {{ form.start_time }}
+            {% if form.start_time.errors %}
+                <ul class="errorlist">{% for e in form.start_time.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endif %}
+        </div>
+
+        {% if form.non_field_errors %}
+            <ul class="errorlist">{% for e in form.non_field_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+
+        <button type="submit" class="btn">Confirm Booking</button>
+    </form>
+</div>
+
+<script>
+    // Hide the raw start_time input; we drive it from the slot buttons below.
+    const startTimeInput = document.getElementById('id_start_time');
+    startTimeInput.style.display = 'none';
+
+    const barberSelect = document.getElementById('id_barber');
+    const serviceSelect = document.getElementById('id_service');
+    const dateInput = document.getElementById('id_date');
+    const slotsWrapper = document.getElementById('slots-wrapper');
+
+    async function loadSlots() {
+        const barberId = barberSelect.value;
+        const serviceId = serviceSelect.value;
+        const date = dateInput.value;
+
+        if (!barberId || !serviceId || !date) {
+            slotsWrapper.innerHTML = '<p class="help-text">Choose a barber, service, and date above to see open times.</p>';
+            return;
+        }
+
+        slotsWrapper.innerHTML = '<p class="help-text">Loading available times…</p>';
+
+        const url = `{% url 'booking:available_slots' %}?barber_id=${barberId}&service_id=${serviceId}&date=${date}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.slots.length === 0) {
+            slotsWrapper.innerHTML = '<p class="help-text">No open slots that day — try another date.</p>';
+            startTimeInput.value = '';
+            return;
+        }
+
+        slotsWrapper.innerHTML = '';
+        data.slots.forEach(slot => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'slot-btn';
+            btn.textContent = formatTime(slot);
+            btn.dataset.value = slot;
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                startTimeInput.value = slot;
+            });
+            slotsWrapper.appendChild(btn);
+        });
+    }
+
+    function formatTime(hhmm) {
+        const [h, m] = hhmm.split(':').map(Number);
+        const period = h >= 12 ? 'PM' : 'AM';
+        const hour12 = h % 12 === 0 ? 12 : h % 12;
+        return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
+    }
+
+    [barberSelect, serviceSelect, dateInput].forEach(el => el.addEventListener('change', loadSlots));
+
+    // If the form re-rendered with errors and previous values, try to reload slots.
+    document.addEventListener('DOMContentLoaded', () => {
+        if (barberSelect.value && serviceSelect.value && dateInput.value) {
+            loadSlots();
+        }
+    });
+</script>
+{% endblock %}
