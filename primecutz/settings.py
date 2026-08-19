@@ -31,10 +31,7 @@ SECRET_KEY = os.environ.get(
 # in your local .env (or shell) to enable debug mode locally.
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = [
-    "primecutz-scheduling-app-momo-jst8ko0fw-anyiam-george.vercel.app",
-    ".vercel.app",  # wildcard - covers every Vercel preview/prod deployment URL
-]
+ALLOWED_HOSTS = ["*"]
 
 # Required for POST requests (forms, admin, login) to work over HTTPS on Vercel.
 # Without this, Django rejects the request as a CSRF failure even with a valid token.
