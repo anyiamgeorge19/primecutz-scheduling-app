@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,8 +20,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-import os
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
@@ -28,10 +27,20 @@ SECRET_KEY = os.environ.get(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+# NOTE: default is now 'False'. You must explicitly set DJANGO_DEBUG=True
+# in your local .env (or shell) to enable debug mode locally.
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = [
+    "primecutz-scheduling-app-momo-jst8ko0fw-anyiam-george.vercel.app",
+    ".vercel.app",  # wildcard - covers every Vercel preview/prod deployment URL
+]
 
+# Required for POST requests (forms, admin, login) to work over HTTPS on Vercel.
+# Without this, Django rejects the request as a CSRF failure even with a valid token.
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
+]
 
 # Application definition
 
@@ -47,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # serves static files on Vercel's serverless runtime
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -77,13 +87,30 @@ WSGI_APPLICATION = 'primecutz.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
+#
+# IMPORTANT: Vercel's Python runtime is serverless — there is no persistent
+# disk, so SQLite (db.sqlite3) will NOT reliably store data in production.
+# It will appear to work, then silently lose data on redeploy/cold start.
+#
+# Set a DATABASE_URL env var in Vercel (e.g. from Neon, Supabase, or
+# Vercel Postgres — all have free tiers) and this will use it automatically.
+# Locally, without DATABASE_URL set, it falls back to SQLite so your dev
+# workflow doesn't change.
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -123,8 +150,17 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 # Media files (barber photos etc.)
+# NOTE: like SQLite, locally-saved media files will NOT persist on Vercel's
+# serverless filesystem. For uploaded images (e.g. barber photos) in
+# production, use a service like Cloudinary or an S3-compatible bucket
+# instead of MEDIA_ROOT once you're ready to launch.
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
