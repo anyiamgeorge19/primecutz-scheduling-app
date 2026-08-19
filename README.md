@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # PrimeCutz — Personal Scheduling Web Application
 **SEN 310 Assignment — Django Web Application**
 Business: **PrimeCutz Barbershop**
@@ -156,3 +157,7 @@ project deliberately does not ship hardcoded credentials for security.
 
 ---
 *Built for SEN 310 — Web Application Development, using Python & Django.*
+=======
+# primecutz-scheduling-app
+A Django website for a hair salon/barbershop with online appointment scheduling.
+>>>>>>> 110e5dd2fe0d33a625fe9a2c91c0338351d483af
